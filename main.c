@@ -28,6 +28,6 @@ int main(int argc, char** argv){
     init_matrix(size, mat);
     double time = time_transpose(transpose_int_matrix, size, mat);
     printf("Time: %f\n", time);
-    free(mat);
+    free_matrix(size, mat);
     return EXIT_SUCCESS;
 }

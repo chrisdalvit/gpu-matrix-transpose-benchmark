@@ -107,3 +107,19 @@ void print_matrix(int size, int** mat){
     }
     printf("\n");
 }
+
+/*
+    Free matrix memory.
+
+    params:
+        size: Size of the matrix
+        matrix: Matrix to free
+    return:
+        void
+*/
+void free_matrix(int size, int** matrix){
+    for(int i = 0; i < size; i++){
+        free(matrix[i]);
+    }
+    free(matrix);
+}
