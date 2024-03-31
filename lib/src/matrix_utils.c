@@ -1,24 +1,69 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "../matrix_utils.h"
 
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 /*
-    Allocate memory for a matrix of given size.
+    Extract the matrix size for command line arguments. 
+    Exit with failure if wrong number of arguments was passed to program.
+
+    params:
+        argc: Number of command line arguments
+        argv: Command line arguments
+    return:
+        Matrix size computed from the command line argument
+*/
+int get_matrix_size(int argc, char *argv[]){
+    if(argc != 2){
+        printf("One argument expected. But got %d arguments.\n", argc-1);
+        exit(EXIT_FAILURE);
+    }
+    return (int) pow(2.0, atoi(argv[1]));
+}
+
+/*
+    Allocate memory for a matrix of given size and datatype.
+
+    params:
+        size: Size of the matrix
+        dtype_ptr_size: Size of a pointer to the matrix datatype
+        dtype_size: Size of the matrix datatype
+    return:
+        Pointer to the allocated matrix
+*/
+int** allocate_matrix(int size, unsigned long dtype_ptr_size, unsigned long dtype_size){
+    int** mat = (int **) malloc(size * dtype_ptr_size);
+    for(int i = 0; i < size; i++){
+        mat[i] =(int *) malloc(size * dtype_size);
+    }
+    return mat;
+}
+
+/*
+    Allocate memory for a integer matrix of given size.
 
     params:
         size: Size of the matrix
     return:
         Pointer to the allocated matrix
 */
-int** allocate_matrix(int size){
-    int** mat = (int **) malloc(size * sizeof(int*));
-    for(int i = 0; i < size; i++){
-        mat[i] =(int *) malloc(size * sizeof(int));
-    }
-    return mat;
+int** allocate_int_matrix(int size){
+    return allocate_matrix(size, sizeof(int*), sizeof(int));
+}
+
+/*
+    Allocate memory for a integer matrix of given size.
+
+    params:
+        size: Size of the matrix
+    return:
+        Pointer to the allocated matrix
+*/
+int** allocate_float_matrix(int size){
+    return allocate_matrix(size, sizeof(float*), sizeof(float));
 }
 
 /*
