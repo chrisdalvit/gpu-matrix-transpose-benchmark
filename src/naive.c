@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "lib/matrix_utils.h"
-#include "lib/matrix_stats.h"
+#include "../lib/matrix_utils.h"
+#include "../lib/matrix_stats.h"
 
 /*
     Transpose matrix.
@@ -12,9 +12,9 @@
     return:
         void
 */
-void transpose_int_matrix(int size, int** mat){
+void naive_transpose_int_matrix(int size, int** mat){
     for(int i = 0; i < size; i++){
-        for(int j = i; j < size; j++){
+        for(int j = 0; j < size; j++){
             int tmp = mat[i][j];
             mat[i][j] = mat[j][i];
             mat[j][i] = tmp;
@@ -26,8 +26,8 @@ int main(int argc, char** argv){
     int size = get_matrix_size(argc, argv);
     int** mat = allocate_int_matrix(size);
     init_matrix(size, mat);
-    double time = time_transpose(transpose_int_matrix, size, mat);
-    printf("Time: %f\n", time);
+    double time = time_transpose(naive_transpose_int_matrix, size, mat);
+    printf("%d,%f\n", size, time);
     free_matrix(size, mat);
     return EXIT_SUCCESS;
 }
