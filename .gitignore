@@ -2,3 +2,4 @@
 bin
 report/local_build
 stats/
+venv/
