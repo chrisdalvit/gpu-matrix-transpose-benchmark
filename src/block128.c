@@ -6,15 +6,15 @@
 #define BLOCK_SIZE 128
 
 void block_transpose_int_matrix(int size, int **mat) {
-    int i, j, ii, jj, tmp;
+    int k, l, i, j, tmp;
 
-    for (ii = 0; ii < size; ii += BLOCK_SIZE) {
-        for (jj = 0; jj < size; jj += BLOCK_SIZE) {
-            for (i = ii; i < ii + BLOCK_SIZE && i < size; ++i) {
-                for (j = i; j < jj + BLOCK_SIZE && j < size; ++j) {
-                    tmp = mat[j][i];
-                    mat[j][i] = mat[i][j];
-                    mat[i][j] = tmp;
+    for (i = 0; i < size; i += BLOCK_SIZE) {
+        for (j = 0; j < size; j += BLOCK_SIZE) {
+            for (k = i; k < i + BLOCK_SIZE && k < size; ++k) {
+                for (l = k; l < j + BLOCK_SIZE && l < size; ++l) {
+                    tmp = mat[l][k];
+                    mat[l][k] = mat[k][l];
+                    mat[k][l] = tmp;
                 }
             }
         }
@@ -24,8 +24,8 @@ void block_transpose_int_matrix(int size, int **mat) {
 
 int main(int argc, char **argv) {
     int size = get_matrix_size(argc, argv);
-    int** mat = allocate_int_matrix(size);
-    init_matrix(size, mat);
+    int** mat = allocate_nested_int_matrix(size);
+    init_nested_matrix(size, mat);
     double time = time_transpose(block_transpose_int_matrix, size, mat);
     printf("%f\n", time);
     free_matrix(size, mat);

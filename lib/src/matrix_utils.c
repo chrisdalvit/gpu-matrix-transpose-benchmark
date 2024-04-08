@@ -25,45 +25,32 @@ int get_matrix_size(int argc, char *argv[]){
 }
 
 /*
-    Allocate memory for a matrix of given size and datatype.
+    Allocate memory for a nested integer matrix of given size.
 
     params:
         size: Size of the matrix
-        dtype_ptr_size: Size of a pointer to the matrix datatype
-        dtype_size: Size of the matrix datatype
     return:
         Pointer to the allocated matrix
 */
-int** allocate_matrix(int size, unsigned long dtype_ptr_size, unsigned long dtype_size){
-    int** mat = (int **) malloc(size * dtype_ptr_size);
+int** allocate_nested_int_matrix(int size){
+    int** mat = (int **) malloc(size * sizeof(int*));
     for(int i = 0; i < size; i++){
-        mat[i] =(int *) malloc(size * dtype_size);
+        mat[i] =(int *) malloc(size * sizeof(int));
     }
     return mat;
 }
 
 /*
-    Allocate memory for a integer matrix of given size.
+    Allocate memory for a flat integer matrix of given size.
 
     params:
         size: Size of the matrix
     return:
         Pointer to the allocated matrix
 */
-int** allocate_int_matrix(int size){
-    return allocate_matrix(size, sizeof(int*), sizeof(int));
-}
-
-/*
-    Allocate memory for a integer matrix of given size.
-
-    params:
-        size: Size of the matrix
-    return:
-        Pointer to the allocated matrix
-*/
-int** allocate_float_matrix(int size){
-    return allocate_matrix(size, sizeof(float*), sizeof(float));
+int* allocate_flat_int_matrix(int size){
+    int* mat = (int *) malloc(size * sizeof(int));
+    return mat;
 }
 
 /*
@@ -75,7 +62,7 @@ int** allocate_float_matrix(int size){
     return:
         void
 */
-void init_matrix(int size, int** mat) {
+void init_nested_matrix(int size, int** mat) {
     for(int i = 0; i < size; i++){
         for(int j = 0; j < size; j++){
             mat[j][i] = rand() % 100;

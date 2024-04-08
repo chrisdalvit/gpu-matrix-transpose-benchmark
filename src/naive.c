@@ -24,8 +24,8 @@ void naive_transpose_int_matrix(int size, int** mat){
 
 int main(int argc, char** argv){
     int size = get_matrix_size(argc, argv);
-    int** mat = allocate_int_matrix(size);
-    init_matrix(size, mat);
+    int** mat = allocate_nested_int_matrix(size);
+    init_nested_matrix(size, mat);
     double time = time_transpose(naive_transpose_int_matrix, size, mat);
     printf("%f\n", time);
     free_matrix(size, mat);
