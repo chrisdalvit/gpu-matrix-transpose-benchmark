@@ -80,7 +80,7 @@ void init_nested_matrix(int size, int** mat) {
     return:
         void
 */
-void print_matrix(int size, int** mat){
+void print_nested_matrix(int size, int** mat){
     for(int i = 0; i < size; i++){
         for(int j = 0; j < size; j++){
             if(i == j){
