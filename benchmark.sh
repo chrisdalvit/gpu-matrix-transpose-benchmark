@@ -11,11 +11,11 @@ for file in $(ls $BIN_DIR)
 do
     OPTIM=${file#*-} # Get optimization flag from suffix
     NAME=${file%-*} # Get file name
-    for size in $(seq 5 13) # Loop over sizes
+    for size in $(seq 5 10) # Loop over sizes
     do
         for i in $(seq 1 5) # Loop over the number of repetitions
         do
-            printf "$NAME,$OPTIM," >> $STATS_FILE
+            printf "$NAME,$OPTIM,$size," >> $STATS_FILE
             $BIN_DIR/$file $size >> $STATS_FILE
         done
     done
