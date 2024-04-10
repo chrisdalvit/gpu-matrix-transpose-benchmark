@@ -25,22 +25,6 @@ int get_matrix_size(int argc, char *argv[]){
 }
 
 /*
-    Allocate memory for a nested integer matrix of given size.
-
-    params:
-        size: Size of the matrix
-    return:
-        Pointer to the allocated matrix
-*/
-int** allocate_nested_int_matrix(int size){
-    int** mat = (int **) malloc(size * sizeof(int*));
-    for(int i = 0; i < size; i++){
-        mat[i] =(int *) malloc(size * sizeof(int));
-    }
-    return mat;
-}
-
-/*
     Allocate memory for a flat integer matrix of given size.
 
     params:
@@ -48,13 +32,13 @@ int** allocate_nested_int_matrix(int size){
     return:
         Pointer to the allocated matrix
 */
-int* allocate_flat_int_matrix(int size){
-    int* mat = (int *) malloc(size * sizeof(int));
+int* allocate_int_matrix(int size){
+    int* mat = (int *) malloc(size * size * sizeof(int));
     return mat;
 }
 
 /*
-    Initialize matrix with random values.
+    Initialize flat matrix with random values.
 
     params:
         size: Size of the matrix
@@ -62,37 +46,10 @@ int* allocate_flat_int_matrix(int size){
     return:
         void
 */
-void init_nested_matrix(int size, int** mat) {
-    for(int i = 0; i < size; i++){
-        for(int j = 0; j < size; j++){
-            mat[j][i] = rand() % 100;
-        }
+void init_matrix(int size, int* mat) {
+    for(int i = 0; i < size * size; i++){
+        mat[i] = rand() % 100;
     }
-}
-
-/*
-    Print a matrix. 
-    Matrix entries on the diagonal are printed in color for better orientation.
-
-    params:
-        size: Size of the matrix
-        mat: Matrix to print
-    return:
-        void
-*/
-void print_nested_matrix(int size, int** mat){
-    for(int i = 0; i < size; i++){
-        for(int j = 0; j < size; j++){
-            if(i == j){
-                printf(ANSI_COLOR_GREEN "%2d " ANSI_COLOR_RESET, mat[i][j]);
-            }
-            else {
-                printf("%2d ", mat[i][j]);
-            }
-        }
-        printf("\n");
-    }
-    printf("\n");
 }
 
 /*

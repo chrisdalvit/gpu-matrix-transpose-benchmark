@@ -13,7 +13,7 @@ do
     NAME=${file%-*} # Get file name
     for size in $(seq 5 10) # Loop over sizes
     do
-        for i in $(seq 1 5) # Loop over the number of repetitions
+        for i in $(seq 1 10) # Loop over the number of repetitions
         do
             printf "$NAME,$OPTIM,$size," >> $STATS_FILE
             $BIN_DIR/$file $size >> $STATS_FILE
