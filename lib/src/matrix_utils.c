@@ -39,7 +39,12 @@ int get_matrix_size(int argc, char *argv[]){
         printf("One argument expected. But got %d arguments.\n", argc-1);
         exit(EXIT_FAILURE);
     }
-    return (int) pow(2.0, atoi(argv[1]));
+    int input = atoi(argv[1]);
+    if(input == 0){
+        printf("Provide a valid numeric value. Not '%s'\n", argv[1]);
+        exit(EXIT_FAILURE);
+    }
+    return (int) pow(2.0, input);
 }
 
 /*
