@@ -48,18 +48,13 @@ int main(int argc, char **argv) {
         print_matrix(size, mat);
     }
     double time = time_transpose(transpose, size, mat);
-    if(debug_mode){
-        for(int i = 0; i < 3*size; i++){
-            printf("-");    
-        }
-        printf("\n");
-        print_matrix(size, mat);
-        printf("\n");
-        printf("Time for transposition: %f\n", time);    
+    double bandwidth = compute_effective_bandwidth(size, time);
 
+    if(debug_mode){
+        print_debug_info(size, mat, time, bandwidth);
     }
     else {
-        printf("%f\n", time);    
+        printf("%f,%f\n", time,bandwidth);    
     }
     free(mat);
 

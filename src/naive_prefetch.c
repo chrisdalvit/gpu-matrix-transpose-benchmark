@@ -15,6 +15,7 @@
 */
 void naive_transpose_int_matrix(int size, int* mat){
     for(int i = 0; i < size; i++){
+        __builtin_prefetch(&mat[(i+1)*size+i]);
         for(int j = i+1; j < size; j++){
             int tmp = mat[i*size+j];
             mat[i*size+j] = mat[j*size+i];
