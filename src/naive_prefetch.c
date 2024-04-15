@@ -33,11 +33,13 @@ int main(int argc, char** argv){
         print_matrix(size, mat);
     }
     double time = time_transpose(naive_transpose_int_matrix, size, mat);
+    double bandwidth = compute_effective_bandwidth(size, time);
+
     if(debug_mode){
-        print_debug_info(size, mat, time);
+        print_debug_info(size, mat, time, bandwidth);
     }
     else {
-        printf("%f\n", time);    
+        printf("%f,%f\n", time, bandwidth);    
     }
     free(mat);
     return EXIT_SUCCESS;

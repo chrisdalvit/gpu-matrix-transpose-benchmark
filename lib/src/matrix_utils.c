@@ -108,12 +108,13 @@ void print_matrix(int size, int* mat){
     return:
         void
 */
-void print_debug_info(int size, int *mat, double time){
+void print_debug_info(int size, int *mat, double time, double bandwidth){
     for(int i = 0; i < 3*size; i++){
         printf("-");    
     }
     printf("\n");
     print_matrix(size, mat);
     printf("\n");
-    printf("Time for transposition: %f\n", time);    
+    printf("Time for transposition: %f\n", time);
+    printf("Effective bandwidth: %.15f\n", bandwidth);
 }
