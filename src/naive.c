@@ -33,14 +33,7 @@ int main(int argc, char** argv){
     }
     double time = time_transpose(naive_transpose_int_matrix, size, mat);
     if(debug_mode){
-        for(int i = 0; i < 3*size; i++){
-            printf("-");    
-        }
-        printf("\n");
-        print_matrix(size, mat);
-        printf("\n");
-        printf("Time for transposition: %f\n", time);    
-
+        print_debug_info(size, mat, time);
     }
     else {
         printf("%f\n", time);    

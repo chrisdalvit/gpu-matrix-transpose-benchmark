@@ -97,3 +97,23 @@ void print_matrix(int size, int* mat){
         printf("\n");
     }
 }
+
+/*
+    Print information for debugging on the terminal.
+
+    params:
+        size: Size of the matrix
+        mat: Transposed matrix
+        time: Time needed for transposition
+    return:
+        void
+*/
+void print_debug_info(int size, int *mat, double time){
+    for(int i = 0; i < 3*size; i++){
+        printf("-");    
+    }
+    printf("\n");
+    print_matrix(size, mat);
+    printf("\n");
+    printf("Time for transposition: %f\n", time);    
+}
