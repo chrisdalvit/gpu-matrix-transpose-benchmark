@@ -17,7 +17,7 @@ create_dirs:
 
 compile_%:
 	@for optim in $(OPTIM_FLAGS) ; do \
-		$(CC) $(SRC_DIR)/$*.c $(CUSTOM_HEADERS) -Wall -O$$optim -o $(TARGET_DIR)/$*-$$optim -lm; \
+		$(CC) $(SRC_DIR)/$*.c $(CUSTOM_HEADERS) -g -Wall -O$$optim -o $(TARGET_DIR)/$*-$$optim -lm; \
 	done
 
 clean: 
