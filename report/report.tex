@@ -1,6 +1,15 @@
 \documentclass{scrartcl}
 
+\usepackage{amsfonts}
 \usepackage{multicol}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdfpagemode=FullScreen,
+}
 
 \subject{GPU Computing}
 \title{First Assignment}
@@ -9,10 +18,24 @@
 
 \begin{document}
     \maketitle
-    \begin{multicols}{2}
-        \section{Introduction}    
-        All human things are subject to decay. And when fate summons, Monarchs must obey.
-        \section{Experiments}
-        All human things are subject to decay. And when fate summons, Monarchs must obey.
-    \end{multicols}
+    \section{Introduction}    
+    The goal of this homework is to implement an algorithm that transposes a non-symmetric matrix. Furthermore, different metrics of the algorithm should be measured and analyzed. In this report I describe the problem setting, algorithms and experimental results of my implementation.\\
+    The code used for this homework is made available through a public \href{https://github.com/chrisdalvit/matrix-transpose-benchmark}{Github repository}. Details on how to run the code and reproduce the results can be found in the \texttt{README.md} file of the Github repository.
+
+    \section{Problem Description}
+    For a given matrix $A \in \mathbb{R}^{n \times m}$, the transpose of the matrix $A^T \in \mathbb{R}^{m \times n}$ is defined as
+    $$
+        A^T_{ij} = A_{ji}
+    $$
+    In this homework, matrices have dimensions of $2^N$ for $N \in \mathbb{N}$, so only square matrices are considered. As a result, the implemented algorithms don't need to accommodate changes in the output matrix's shape.
+
+    While implementing an algorithm that computes the transpose of a matrix is straightforward, comming up with an efficient implementation is quite tricky. Generally, the exploitation of spatial and temporal locality can enhance efficiency.
+
+    \subsection{Algorithms}
+    All human things are subject to decay. And when fate summons, Monarchs must obey.
+
+    \section{Experiments}
+    \subsection{Setup}
+    \subsection{Results}
+    All human things are subject to decay. And when fate summons, Monarchs must obey.
 \end{document}

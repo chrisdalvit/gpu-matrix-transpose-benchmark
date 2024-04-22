@@ -20,6 +20,9 @@ compile_%:
 		$(CC) $(SRC_DIR)/$*.c $(CUSTOM_HEADERS) -g -Wall -O$$optim -o $(TARGET_DIR)/$*-$$optim -lm; \
 	done
 
+report: report/report.tex
+	pdflatex -output-directory report report/report.tex
+
 clean: 
 	rm -rf $(TARGET_DIR)
 	rm -rf $(STATS_DIR)
