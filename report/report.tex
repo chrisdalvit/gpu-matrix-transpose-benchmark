@@ -11,6 +11,9 @@
     pdfpagemode=FullScreen,
 }
 
+\usepackage{biblatex}
+\addbibresource{biblography.bib}
+
 \subject{GPU Computing}
 \title{First Assignment}
 \subtitle{Report}
@@ -27,9 +30,9 @@
     $$
         A^T_{ij} = A_{ji}
     $$
-    In this homework, matrices have dimensions of $2^N$ for $N \in \mathbb{N}$, so only square matrices are considered. As a result, the implemented algorithms don't need to accommodate changes in the output matrix's shape.
+    In this homework, matrices have dimensions of $2^N$ for $N \in \mathbb{N}$, so only square matrices are considered. As a result, the implemented algorithms don't need to accommodate changes in the output matrix's shape. For the purpose of this homework we assume row-major memory layout of the matrix.
 
-    While implementing an algorithm that computes the transpose of a matrix is straightforward, comming up with an efficient implementation is quite tricky. Generally, the exploitation of spatial and temporal locality can enhance efficiency.
+    While implementing an algorithm that computes the transpose of a matrix is straightforward, comming up with an efficient implementation is quite tricky. In general, leveraging spatial and temporal locality can improve efficiency. Because each element of the matrix is accessed only once, temporal locality cannot be exploited for computing the transposed matrix \cite{chatterjee2000cache}, so spatial locality becomes the only source for improvement. The issue with leveraging spatial locality in matrix transposition is that data is accessed along rows but written along columns, potentially leading to poor cache performance. Algorithms that respect spatial locality in their memory access pattern can benefit from quicker access to cached data. In the following, the different algorithms implemented during this homework are described and their memory access pattern is discussed.
 
     \subsection{Algorithms}
     All human things are subject to decay. And when fate summons, Monarchs must obey.
@@ -38,4 +41,6 @@
     \subsection{Setup}
     \subsection{Results}
     All human things are subject to decay. And when fate summons, Monarchs must obey.
+
+    \printbibliography
 \end{document}

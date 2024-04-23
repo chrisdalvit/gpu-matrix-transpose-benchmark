@@ -31,6 +31,9 @@ compile_%:
 report: report/report.tex
 	@echo Compile report...
 	@pdflatex -output-directory report report/report.tex
+	@biber report/report
+	@pdflatex -output-directory report report/report.tex
+	@pdflatex -output-directory report report/report.tex
 
 clean: 
 	@echo Clean up directories...
