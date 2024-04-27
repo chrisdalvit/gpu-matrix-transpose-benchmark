@@ -19,7 +19,7 @@ void naive_transpose_int_matrix(int size, int* mat){
             int tmp = mat[i*size+j];
             mat[i*size+j] = mat[j*size+i];
             mat[j*size+i] = tmp;
-            __builtin_prefetch(&mat[j*size+(i+1)], 0, 1);
+            __builtin_prefetch(&mat[j*size+(i+1)], 1, 1);
             __builtin_prefetch(&mat[(i+1)*size+j], 1, 1);
         }
     }
