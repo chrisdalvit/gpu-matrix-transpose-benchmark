@@ -1,6 +1,7 @@
 \documentclass{scrartcl}
 
 \usepackage{amsfonts}
+\usepackage{amsmath}
 \usepackage{multicol}
 \usepackage{listings}
 \usepackage{hyperref}
@@ -48,9 +49,12 @@
 \addbibresource{biblography.bib}
 
 \subject{GPU Computing}
-\title{First Assignment}
-\subtitle{Report}
-\author{Christian Dalvit}
+\title{First Assignment - Report}
+\author{
+    Christian Dalvit\\
+    {\small Student-ID: 249988}\\
+    {\small E-mail: christian.dalvit@studenti.unitn.it}
+}
 
 \begin{document}
     \maketitle
@@ -68,7 +72,7 @@
     While implementing an algorithm that computes the transpose of a matrix is straightforward, comming up with an efficient implementation is quite tricky. In general, leveraging spatial and temporal locality can improve efficiency. Because each element of the matrix is accessed only once, temporal locality cannot be exploited for computing the transposed matrix \cite{chatterjee2000cache}, so spatial locality becomes the only source for improvement. The issue with leveraging spatial locality in matrix transposition is that data is accessed along rows but written along columns, potentially leading to poor cache performance. Algorithms that respect spatial locality in their memory access pattern can benefit from quicker access to cached data. In the following, the different algorithms implemented during this homework are described and their memory access pattern is discussed.
 
     \subsection{Algorithms}
-    In this homework three different algorithms for in-place matrix transposition are implemented. The first implementation, as shown in Figure \ref{fig:naive_implementation}, can be directly inferred from the mathematical definition. Transposition is performed by iterating over all entries above the matrix diagonal and swaping them with the corresponding entries below the diagonal. The first implementation is referred to as "naive" and it will serve as baseline implementation to measure performance improvements of other implementations. 
+    In this homework three different algorithms for in-place matrix transposition are implemented. The first implementation, as shown in Figure \ref{fig:naive_implementation}, can be directly inferred from the mathematical definition. Transposition is performed by iterating over all entries above the matrix diagonal and swaping them with the corresponding entries below the diagonal. The first implementation is referred to as ``naive'' and it will serve as baseline implementation to measure performance improvements of other implementations. 
     The main issue with the naive implementation's memory access pattern is the disjointed access from \lstinline{mat[j*size+i]}, potentially causing poor cache performance, especially with larger matrices where \lstinline{mat[j*size+i]} might not be present in cache and requires loading from memory.
     
     \begin{figure}
@@ -76,39 +80,68 @@
             void naive_transpose(int size, int* mat){
                 for(int i = 0; i < size; i++){
                     for(int j = i+1; j < size; j++){
-                        int tmp = mat[i*size+j];
-                        mat[i*size+j] = mat[j*size+i];
-                        mat[j*size+i] = tmp;
+                        swap(mat[i*size+j], mat[j*size+i]);
                     }
                 }
             }
         \end{lstlisting}
-        \caption{Naive implementation of in-place matrix transposition.}
+        \caption{Pseudocode for the naive implementation.}
         \label{fig:naive_implementation}        
     \end{figure}
 
-    The second implementation (Figure \ref{fig:prefetch_implementation}) tries to improve performance by prefetching the memory addresses needed in the next iteration. Since it is known which memory addresses are accessed in the next iteration, these addresses can be prefetched in order to improve performance. The built-in function \lstinline{__builtin_prefetch} can be used to perform prefetching. The function takes 
+    The second implementation (Figure \ref{fig:prefetch_implementation}) tries to improve performance by prefetching the memory addresses needed in the next iteration. This should reduce cache-miss latency by moving data into the cache before it is accessed \cite{gccdocs}. The built-in function \lstinline{__builtin_prefetch} can be used to perform prefetching. \lstinline{__builtin_prefetch} takes as arguments the address to be prefetched and two optional arguments \textit{rw} and \textit{locality}. Setting \textit{rw} to $1$ means preparing the prefetch for write access and setting \textit{locality} to $1$ means that the prefetched data has low temporal locality \cite{gccdocs}. The second implementation is referred to as ``prefetch''-implementation.
+
+    The third algorithm (Figure \ref{fig:rec_implementation}) implements a recursive pattern for matrix transposition. It uses the fact that 
+    \begin{equation*}
+        \begin{pmatrix}
+            A & B \\
+            C & D
+        \end{pmatrix}^T = 
+        \begin{pmatrix}
+            A^T & C^T \\
+            B^T & D^T
+        \end{pmatrix}
+    \end{equation*}
+    Where $A, B, C$ and $D$ are submatrices. Note that the submatrices $B$ and $C$ get swapped. The idea behind this algorithm is that it splits the matrix into four sub-matrices until the submatrices fit into the cache. Then the submatrices get transposed and the quadrants get swapped. Figure \ref{fig:rec_implementation} depicts pseudocode for this algorithm. For a matrix sizes of 128 or smaller the algorithm performs a normal transpose operation (i.e. the \lstinline{swap_small_matrix}-function call in Figure \ref{fig:rec_implementation}). Otherwise the matrix is splitted into four submatrices and the function is called recursively (i.e. the \lstinline{else}-block in Figure \ref{fig:rec_implementation}). After the transposition of the submatrices, the upper-right and bottom-left quadrants need to be swapped (i.e. the \lstinline{swap_quadrants}-function call in Figure \ref{fig:rec_implementation}). This algorithm exploits spatial locality as it divides the matrix into sub-matrices that can fit into the cache. The third algorithm also has a reduced I/O complexity of $\mathcal{O}(\frac{N^2}{B})$ \cite{algorithmica}, where $N$ is the size of the matrix and $B$ the size of the blocks (i.e. the size of matrices where standard transposition is performed). It then transposes each submatrix, which can be performed more efficiently as the whole submatrix is present in cache. This algorithm also works quite well for large matrices, because they are always reduced to submatrices of sizes that fit into cache. The threshold of 128 for performing standard matrix transposition, was determined empircally. During the homework the same algorithm was tested for threshold values 32, 64, 128, 256 and 512. The results showed that 128 was the algorithm worked (on the tested architectures) best with 128 as threshold. 
     
     \begin{figure}
         \begin{lstlisting}[language=C]
             void prefetch_transpose(int size, int* mat){
                 for(int i = 0; i < size; i++){
                     for(int j = i+1; j < size; j++){
-                        int tmp = mat[i*size+j];
-                        mat[i*size+j] = mat[j*size+i];
-                        mat[j*size+i] = tmp;
-                        __builtin_prefetch(&mat[j*size+(i+1)], 1, 0);
-                        __builtin_prefetch(&mat[(i+1)*size+j], 1, 0);
+                        swap(mat[i*size+j], mat[j*size+i]);
+                        __builtin_prefetch(&mat[j*size+(i+1)], 1, 1);
+                        __builtin_prefetch(&mat[(i+1)*size+j], 1, 1);
                     }
                 }
             }
         \end{lstlisting}
-        \caption{Naive implementation with prefetch of in-place matrix transposition.}
+        \caption{Pseudocode for the naive implementation with prefetch.}
         \label{fig:prefetch_implementation}        
     \end{figure}
 
+    \begin{figure}
+        \begin{lstlisting}[language=C]
+            void transpose_block(int size, int *mat, int row_offset, int col_offset) {
+                if (size <= 128) {
+                    swap_small_matrix(size, mat, row_offset, col_offset);
+                } else {
+                    int m = size / 2;
+                    transpose_block(m, mat, row_offset, col_offset);
+                    transpose_block(m, mat, row_offset, col_offset+m);
+                    transpose_block(m, mat, row_offset+m, col_offset);
+                    transpose_block(m, mat, row_offset+m, col_offset+m);
+            
+                    // Swap upper-right and bottom-left quadrants
+                    swap_quadrants(m, mat, row_offset, col_offset);
+                }
+            }
+        \end{lstlisting}
+        \caption{Naive implementation with prefetch of in-place matrix transposition.}
+        \label{fig:rec_implementation}        
+    \end{figure}
 
-    \section{Experiments}
+    \section{Experiments} \label{sec:experiments}
     \subsection{Setup}
     \subsection{Results}
     All human things are subject to decay. And when fate summons, Monarchs must obey.
