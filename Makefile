@@ -25,7 +25,7 @@ stats: dirs $(BINS:%=compile_%)
 compile_%:
 	@echo Compile $*...
 	@for optim in $(OPTIM_FLAGS) ; do \
-		$(CC) $(SRC_DIR)/$*.c $(CUSTOM_HEADERS) -g -Wall -O$$optim -o $(TARGET_DIR)/$*-$$optim -lm; \
+		$(CC) $(SRC_DIR)/$*.c $(CUSTOM_HEADERS) -g0 -Wall -O$$optim -o $(TARGET_DIR)/$*-$$optim -lm; \
 	done
 
 report: report/report.tex
