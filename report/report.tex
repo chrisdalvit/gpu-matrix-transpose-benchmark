@@ -2,6 +2,7 @@
 
 \usepackage{amsfonts}
 \usepackage{multicol}
+\usepackage{listings}
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
@@ -10,6 +11,38 @@
     urlcolor=cyan,
     pdfpagemode=FullScreen,
 }
+
+\usepackage{xcolor}
+
+\definecolor{mGreen}{rgb}{0,0.6,0}
+\definecolor{mGray}{rgb}{0.5,0.5,0.5}
+\definecolor{mPurple}{rgb}{0.58,0,0.82}
+\definecolor{backgroundColour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{customc}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=L,
+  xleftmargin=\parindent,
+  language=C,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\bfseries\color{green!40!black},
+  commentstyle=\itshape\color{purple!40!black},
+  identifierstyle=\color{blue},
+  stringstyle=\color{orange},
+}
+
+\lstdefinestyle{customasm}{
+  belowcaptionskip=1\baselineskip,
+  frame=L,
+  xleftmargin=\parindent,
+  language=[x86masm]Assembler,
+  basicstyle=\footnotesize\ttfamily,
+  commentstyle=\itshape\color{purple!40!black},
+}
+
+\lstset{escapechar=@,style=customc}
 
 \usepackage{biblatex}
 \addbibresource{biblography.bib}
@@ -35,7 +68,45 @@
     While implementing an algorithm that computes the transpose of a matrix is straightforward, comming up with an efficient implementation is quite tricky. In general, leveraging spatial and temporal locality can improve efficiency. Because each element of the matrix is accessed only once, temporal locality cannot be exploited for computing the transposed matrix \cite{chatterjee2000cache}, so spatial locality becomes the only source for improvement. The issue with leveraging spatial locality in matrix transposition is that data is accessed along rows but written along columns, potentially leading to poor cache performance. Algorithms that respect spatial locality in their memory access pattern can benefit from quicker access to cached data. In the following, the different algorithms implemented during this homework are described and their memory access pattern is discussed.
 
     \subsection{Algorithms}
-    All human things are subject to decay. And when fate summons, Monarchs must obey.
+    In this homework three different algorithms for in-place matrix transposition are implemented. The first implementation, as shown in Figure \ref{fig:naive_implementation}, can be directly inferred from the mathematical definition. Transposition is performed by iterating over all entries above the matrix diagonal and swaping them with the corresponding entries below the diagonal. The first implementation is referred to as "naive" and it will serve as baseline implementation to measure performance improvements of other implementations. 
+    The main issue with the naive implementation's memory access pattern is the disjointed access from \lstinline{mat[j*size+i]}, potentially causing poor cache performance, especially with larger matrices where \lstinline{mat[j*size+i]} might not be present in cache and requires loading from memory.
+    
+    \begin{figure}
+        \begin{lstlisting}[language=C]
+            void naive_transpose(int size, int* mat){
+                for(int i = 0; i < size; i++){
+                    for(int j = i+1; j < size; j++){
+                        int tmp = mat[i*size+j];
+                        mat[i*size+j] = mat[j*size+i];
+                        mat[j*size+i] = tmp;
+                    }
+                }
+            }
+        \end{lstlisting}
+        \caption{Naive implementation of in-place matrix transposition.}
+        \label{fig:naive_implementation}        
+    \end{figure}
+
+    The second implementation (Figure \ref{fig:prefetch_implementation}) tries to improve performance by prefetching the memory addresses needed in the next iteration. Since it is known which memory addresses are accessed in the next iteration, these addresses can be prefetched in order to improve performance. The built-in function \lstinline{__builtin_prefetch} can be used to perform prefetching. The function takes 
+    
+    \begin{figure}
+        \begin{lstlisting}[language=C]
+            void prefetch_transpose(int size, int* mat){
+                for(int i = 0; i < size; i++){
+                    for(int j = i+1; j < size; j++){
+                        int tmp = mat[i*size+j];
+                        mat[i*size+j] = mat[j*size+i];
+                        mat[j*size+i] = tmp;
+                        __builtin_prefetch(&mat[j*size+(i+1)], 1, 0);
+                        __builtin_prefetch(&mat[(i+1)*size+j], 1, 0);
+                    }
+                }
+            }
+        \end{lstlisting}
+        \caption{Naive implementation with prefetch of in-place matrix transposition.}
+        \label{fig:prefetch_implementation}        
+    \end{figure}
+
 
     \section{Experiments}
     \subsection{Setup}
