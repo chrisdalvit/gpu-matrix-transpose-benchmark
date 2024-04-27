@@ -58,6 +58,10 @@
 
 \begin{document}
     \maketitle
+    \thispagestyle{empty}
+    \newpage
+
+    \setcounter{page}{1}
     \section{Introduction}    
     The goal of this homework is to implement an algorithm that transposes a non-symmetric matrix. Furthermore, different metrics of the algorithm should be measured and analyzed. In this report I describe the problem setting, algorithms and experimental results of my implementation.\\
     The code used for this homework is made available through a public \href{https://github.com/chrisdalvit/matrix-transpose-benchmark}{Github repository}. Details on how to run the code and reproduce the results can be found in the \texttt{README.md} file of the Github repository.
@@ -91,19 +95,6 @@
 
     The second implementation (Figure \ref{fig:prefetch_implementation}) tries to improve performance by prefetching the memory addresses needed in the next iteration. This should reduce cache-miss latency by moving data into the cache before it is accessed \cite{gccdocs}. The built-in function \lstinline{__builtin_prefetch} can be used to perform prefetching. \lstinline{__builtin_prefetch} takes as arguments the address to be prefetched and two optional arguments \textit{rw} and \textit{locality}. Setting \textit{rw} to $1$ means preparing the prefetch for write access and setting \textit{locality} to $1$ means that the prefetched data has low temporal locality \cite{gccdocs}. The second implementation is referred to as ``prefetch''-implementation.
 
-    The third algorithm (Figure \ref{fig:rec_implementation}) implements a recursive pattern for matrix transposition. It uses the fact that 
-    \begin{equation*}
-        \begin{pmatrix}
-            A & B \\
-            C & D
-        \end{pmatrix}^T = 
-        \begin{pmatrix}
-            A^T & C^T \\
-            B^T & D^T
-        \end{pmatrix}
-    \end{equation*}
-    Where $A, B, C$ and $D$ are submatrices. Note that the submatrices $B$ and $C$ get swapped. The idea behind this algorithm is that it splits the matrix into four sub-matrices until the submatrices fit into the cache. Then the submatrices get transposed and the quadrants get swapped. Figure \ref{fig:rec_implementation} depicts pseudocode for this algorithm. For a matrix sizes of 128 or smaller the algorithm performs a normal transpose operation (i.e. the \lstinline{swap_small_matrix}-function call in Figure \ref{fig:rec_implementation}). Otherwise the matrix is splitted into four submatrices and the function is called recursively (i.e. the \lstinline{else}-block in Figure \ref{fig:rec_implementation}). After the transposition of the submatrices, the upper-right and bottom-left quadrants need to be swapped (i.e. the \lstinline{swap_quadrants}-function call in Figure \ref{fig:rec_implementation}). This algorithm exploits spatial locality as it divides the matrix into sub-matrices that can fit into the cache. The third algorithm also has a reduced I/O complexity of $\mathcal{O}(\frac{N^2}{B})$ \cite{algorithmica}, where $N$ is the size of the matrix and $B$ the size of the blocks (i.e. the size of matrices where standard transposition is performed). It then transposes each submatrix, which can be performed more efficiently as the whole submatrix is present in cache. This algorithm also works quite well for large matrices, because they are always reduced to submatrices of sizes that fit into cache. The threshold of 128 for performing standard matrix transposition, was determined empircally. During the homework the same algorithm was tested for threshold values 32, 64, 128, 256 and 512. The results showed that 128 was the algorithm worked (on the tested architectures) best with 128 as threshold. 
-    
     \begin{figure}
         \begin{lstlisting}[language=C]
             void prefetch_transpose(int size, int* mat){
@@ -119,6 +110,20 @@
         \caption{Pseudocode for the naive implementation with prefetch.}
         \label{fig:prefetch_implementation}        
     \end{figure}
+
+    The third algorithm (Figure \ref{fig:rec_implementation}) implements a recursive pattern for matrix transposition. It uses the fact that 
+    \begin{equation*}
+        \begin{pmatrix}
+            A & B \\
+            C & D
+        \end{pmatrix}^T = 
+        \begin{pmatrix}
+            A^T & C^T \\
+            B^T & D^T
+        \end{pmatrix}
+    \end{equation*}
+    Where $A, B, C$ and $D$ are submatrices. Note that the submatrices $B$ and $C$ get swapped. The idea behind this algorithm is that it splits the matrix into four sub-matrices until the submatrices fit into the cache. Then the submatrices get transposed and the quadrants get swapped. Figure \ref{fig:rec_implementation} depicts pseudocode for this algorithm. For a matrix sizes of 128 or smaller the algorithm performs a normal transpose operation (i.e. the \lstinline{swap_small_matrix}-function call in Figure \ref{fig:rec_implementation}). Otherwise the matrix is splitted into four submatrices and the function is called recursively (i.e. the \lstinline{else}-block in Figure \ref{fig:rec_implementation}). After the transposition of the submatrices, the upper-right and bottom-left quadrants need to be swapped (i.e. the \lstinline{swap_quadrants}-function call in Figure \ref{fig:rec_implementation}).\\
+    This algorithm exploits spatial locality as it divides the matrix into sub-matrices that can fit into the cache. The third algorithm also has a reduced I/O complexity of $\mathcal{O}(\frac{N^2}{B})$ \cite{algorithmica}, where $N$ is the size of the matrix and $B$ the size of the blocks (i.e. the size of matrices where standard transposition is performed). It then transposes each submatrix, which can be performed more efficiently as the whole submatrix is present in cache. This algorithm also works quite well for large matrices, because they are always reduced to submatrices of sizes that fit into cache. The threshold of 128 for performing standard matrix transposition, was determined empircally. During the homework the same algorithm was tested for threshold values 32, 64, 128, 256 and 512. The results showed that 128 was the algorithm worked (on the tested architectures) best with 128 as threshold. 
 
     \begin{figure}
         \begin{lstlisting}[language=C]
@@ -142,9 +147,18 @@
     \end{figure}
 
     \section{Experiments} \label{sec:experiments}
+    In this section the experimental results of the three algorithms are evaluated and compared.
     \subsection{Setup}
+    The three algorithms were implemented in C. Each algorithm was compiled with optimization levels \texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3}. Each resulting binary was evaluated 50 times for matrix sizes between $2^8$ and $2^{14}$. Cache data was collected using Valgrind \cite{valgrind}. The experiments were conducted on two different architectures
+    \begin{itemize}
+        \item MacBook Air 
+        \item iMac 
+    \end{itemize}
+    Unfortunately Valgrind is not officially supported for ARM-based Apple computers \cite{valgrinddocs} and Open-Source projects working on compatibility for M1 processors are still in the experimental phase \cite{valgrindm1bug}. Therefore it is not possible to provide cache performance data for the MacBook Air experiments. 
+
     \subsection{Results}
     All human things are subject to decay. And when fate summons, Monarchs must obey.
 
+    \newpage
     \printbibliography
 \end{document}
