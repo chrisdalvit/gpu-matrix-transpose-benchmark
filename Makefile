@@ -11,7 +11,7 @@ OPTIM_FLAGS = 0 1 2 3
 SRC := $(shell ls $(SRC_DIR))
 BINS := $(SRC:%.c=%)
 
-all: dirs $(BINS:%=compile_%) stats report
+all: dirs compile stats report
 	
 dirs:
 	@echo Create directories...
@@ -21,6 +21,8 @@ dirs:
 stats: dirs $(BINS:%=compile_%)
 	@echo Run benchmark file...
 	@sh benchmark.sh $(TARGET_DIR) $(STATS_DIR)
+
+compile: $(BINS:%=compile_%)
 
 compile_%:
 	@echo Compile $*...
