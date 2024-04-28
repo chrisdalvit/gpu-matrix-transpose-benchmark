@@ -11,3 +11,4 @@ venv/
 *.blg
 *-blx.bib
 *.xml
+*.ipynb
