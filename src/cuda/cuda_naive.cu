@@ -130,13 +130,12 @@ int main(int argc, char **argv){
     // Init matrix
     init_matrix(size, host_mat);
 
-    if(debug_mode){
-        print_matrix(size, host_mat);
-    }
-
     // Time host
     for(int t=0; t < REPETITIONS; t++){
         init_matrix(size, host_mat);
+        if(debug_mode){
+            print_matrix(size, host_mat);
+        }
         clock_t begin = clock();
         host_transpose(size, host_mat);
         clock_t end = clock();
@@ -153,6 +152,9 @@ int main(int argc, char **argv){
     // Time device
     for(int t=0; t < REPETITIONS; t++){
         init_matrix(size, host_mat);
+        if(debug_mode){
+            print_matrix(size, host_mat);
+        }
 
         clock_t begin = clock();
         cudaMemcpy(dev_mat, host_mat, size * size * sizeof(int), cudaMemcpyHostToDevice);
