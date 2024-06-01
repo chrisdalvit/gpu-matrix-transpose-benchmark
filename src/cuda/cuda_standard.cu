@@ -2,39 +2,38 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdbool.h>
-#include <cmath>
 #include <cuda_runtime.h>
 
 #include "../../lib/helper_cuda.h"
 
-#define REPETITIONS 2
+#define REPETITIONS 50
 
-__global__ void device_transpose(int size, int* mat){
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    int j = blockIdx.y * blockDim.y + threadIdx.y;
+__global__ void transpose(int *matrix, int size) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (i < j && i < size && j < size) {
-        int tmp = mat[i*size+j];
-        mat[i*size+j] = mat[j*size+i];
-        mat[j*size+i] = tmp;
+    if (x < size && y < size && x < y) {
+        int idx1 = y * size + x;
+        int idx2 = x * size + y;
+        int temp = matrix[idx1];
+        matrix[idx1] = matrix[idx2];
+        matrix[idx2] = temp;
     }
 }
 
 /*
-    Compute the effective bandwidth of a matrix transposition. 
+    Initialize matrix with random values between 0 and 99.
 
     params:
         size: Size of the matrix
-        time: Time needed to transpose the matrix
+        mat: Transposed matrix
     return:
-        The effective bandwidth in bytes
+        void
 */
-double compute_effective_bandwidth(int size, double time){
-    int num_matrix_elements = size * size;
-    int matrix_size_in_bytes = num_matrix_elements * sizeof(int);
-    // Size we read and write every element, the amount of moved bytes is twice the total bytes of the matrix
-    double moved_bytes = 2.0*matrix_size_in_bytes; 
-    return moved_bytes / time;
+void init_matrix(int size, int* mat){
+    for(int i = 0; i < size * size; i++){
+        mat[i] = rand() % 100;
+    }
 }
 
 /*
@@ -77,22 +76,24 @@ void print_debug_info(int size, int *mat, double time, double bandwidth){
 }
 
 /*
-    Initialize matrix with random values between 0 and 99.
+    Compute the effective bandwidth of a matrix transposition. 
 
     params:
         size: Size of the matrix
-        mat: Transposed matrix
+        time: Time needed to transpose the matrix
     return:
-        void
+        The effective bandwidth in bytes
 */
-void init_matrix(int size, int* mat){
-    for(int i = 0; i < size * size; i++){
-        mat[i] = rand() % 100;
-    }
+double compute_effective_bandwidth(int size, double time){
+    int num_matrix_elements = size * size;
+    int matrix_size_in_bytes = num_matrix_elements * sizeof(int);
+    // Size we read and write every element, the amount of moved bytes is twice the total bytes of the matrix
+    double moved_bytes = 2.0*matrix_size_in_bytes; 
+    return moved_bytes / time;
 }
 
-int main(int argc, char **argv){
-    
+int main(int argc, char **argv) {
+
     // Check if argumnet is present
     if(argc < 2){
         printf("One argument expected. But got %d arguments.\n", argc-1);
@@ -112,45 +113,39 @@ int main(int argc, char **argv){
         exit(EXIT_FAILURE);
     }
     int size = (int) pow(2.0, input);
-    
-    // Allocate matrix memory on host and device
-    int* host_mat = (int *) malloc(size * size * sizeof(int));
-    int* dev_mat;
-    checkCudaErrors( cudaMalloc(&dev_mat, size * size * sizeof(int)) );
 
-    // Init matrix
-    init_matrix(size, host_mat);
+    int* h_matrix = (int *) malloc(size * size * sizeof(int));
+    init_matrix(size, h_matrix);
 
-    if(debug_mode){
-        print_matrix(size, host_mat);
-    }
+    int *d_matrix;
+    cudaMalloc(&d_matrix, size * size * sizeof(int));
 
-    // Time device
-    for(int num_threads=1; num_threads < 512; num_threads = num_threads*2){
-        int num_blocks = ceil(size / num_threads);
-        for(int t=0; t < REPETITIONS; t++){
-            init_matrix(size, host_mat);
+    dim3 blockSize(16, 16);
+    dim3 gridSize((size + blockSize.x - 1) / blockSize.x, (size + blockSize.y - 1) / blockSize.y);
 
-            clock_t begin = clock();
-            cudaMemcpy(dev_mat, host_mat, size * size * sizeof(int), cudaMemcpyHostToDevice);
-            device_transpose<<<num_blocks,num_threads>>>(size, dev_mat);
-            checkCudaErrors( cudaDeviceSynchronize() );
-            cudaMemcpy(host_mat, dev_mat, size * size * sizeof(int), cudaMemcpyDeviceToHost);
-            clock_t end = clock();
-
-            double time = (double)(end - begin) / CLOCKS_PER_SEC;
-            double bandwidth = compute_effective_bandwidth(size, time);
-            if(debug_mode){
-                print_debug_info(size, host_mat, time, bandwidth);
-            }
-            else {
-                printf("%f,%f,device,%d,%d\n", time, bandwidth, num_blocks, num_threads);    
-            }
+    for(int t=0; t < REPETITIONS; t++){
+        init_matrix(size, h_matrix);
+        if(debug_mode){
+            print_matrix(size, h_matrix);
+        }
+        clock_t begin = clock();
+        cudaMemcpy(d_matrix, h_matrix, size * size * sizeof(int), cudaMemcpyHostToDevice);
+        transpose<<<gridSize, blockSize>>>(d_matrix, size);
+        cudaDeviceSynchronize();
+        cudaMemcpy(h_matrix, d_matrix, size * size * sizeof(int), cudaMemcpyDeviceToHost);
+        clock_t end = clock();
+        double time = (double)(end - begin) / CLOCKS_PER_SEC;
+        double bandwidth = compute_effective_bandwidth(size, time);
+        if(debug_mode){
+            print_debug_info(size, h_matrix, time, bandwidth);
+        }
+        else {
+            printf("%f,%f,device,0,0\n", time, bandwidth);    
         }
     }
 
-    cudaFree(dev_mat);
-    free(host_mat);
+    cudaFree(d_matrix);
+    free(h_matrix);
 
     return 0;
 }
