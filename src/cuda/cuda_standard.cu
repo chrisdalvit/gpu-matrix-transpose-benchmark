@@ -2,30 +2,21 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdbool.h>
+#include <cmath>
 #include <cuda_runtime.h>
 
 #include "../../lib/helper_cuda.h"
 
-#define REPETITIONS 50
+#define REPETITIONS 2
 
-__global__
-void device_transpose(int size, int* mat){
-    for(int i = 0; i < size; i++){
-        for(int j = i+1; j < size; j++){
-            int tmp = mat[i*size+j];
-            mat[i*size+j] = mat[j*size+i];
-            mat[j*size+i] = tmp;
-        }
-    }
-}
+__global__ void device_transpose(int size, int* mat){
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
 
-void host_transpose(int size, int* mat){
-    for(int i = 0; i < size; i++){
-        for(int j = i+1; j < size; j++){
-            int tmp = mat[i*size+j];
-            mat[i*size+j] = mat[j*size+i];
-            mat[j*size+i] = tmp;
-        }
+    if (i < j && i < size && j < size) {
+        int tmp = mat[i*size+j];
+        mat[i*size+j] = mat[j*size+i];
+        mat[j*size+i] = tmp;
     }
 }
 
@@ -134,40 +125,27 @@ int main(int argc, char **argv){
         print_matrix(size, host_mat);
     }
 
-    // Time host
-    for(int t=0; t < REPETITIONS; t++){
-        init_matrix(size, host_mat);
-        clock_t begin = clock();
-        host_transpose(size, host_mat);
-        clock_t end = clock();
-        double time = (double)(end - begin) / CLOCKS_PER_SEC;
-        double bandwidth = compute_effective_bandwidth(size, time);
-        if(debug_mode){
-            print_debug_info(size, host_mat, time, bandwidth);
-        }
-        else {
-            printf("%f,%f,host,0,0\n", time, bandwidth);    
-        }
-    }
-
     // Time device
-    for(int t=0; t < REPETITIONS; t++){
-        init_matrix(size, host_mat);
+    for(int num_threads=1; num_threads < 512; num_threads = num_threads*2){
+        int num_blocks = ceil(size / num_threads);
+        for(int t=0; t < REPETITIONS; t++){
+            init_matrix(size, host_mat);
 
-        clock_t begin = clock();
-        cudaMemcpy(dev_mat, host_mat, size * size * sizeof(int), cudaMemcpyHostToDevice);
-        device_transpose<<<1,1>>>(size, dev_mat);
-        checkCudaErrors( cudaDeviceSynchronize() );
-        cudaMemcpy(host_mat, dev_mat, size * size * sizeof(int), cudaMemcpyDeviceToHost);
-        clock_t end = clock();
+            clock_t begin = clock();
+            cudaMemcpy(dev_mat, host_mat, size * size * sizeof(int), cudaMemcpyHostToDevice);
+            device_transpose<<<num_blocks,num_threads>>>(size, dev_mat);
+            checkCudaErrors( cudaDeviceSynchronize() );
+            cudaMemcpy(host_mat, dev_mat, size * size * sizeof(int), cudaMemcpyDeviceToHost);
+            clock_t end = clock();
 
-        double time = (double)(end - begin) / CLOCKS_PER_SEC;
-        double bandwidth = compute_effective_bandwidth(size, time);
-        if(debug_mode){
-            print_debug_info(size, host_mat, time, bandwidth);
-        }
-        else {
-            printf("%f,%f,device,0,0\n", time, bandwidth);    
+            double time = (double)(end - begin) / CLOCKS_PER_SEC;
+            double bandwidth = compute_effective_bandwidth(size, time);
+            if(debug_mode){
+                print_debug_info(size, host_mat, time, bandwidth);
+            }
+            else {
+                printf("%f,%f,device,%d,%d\n", time, bandwidth, num_blocks, num_threads);    
+            }
         }
     }
 
