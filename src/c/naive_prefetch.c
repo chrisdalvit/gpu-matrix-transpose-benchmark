@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "../lib/matrix_utils.h"
-#include "../lib/matrix_stats.h"
+#include "../../lib/matrix_utils.h"
+#include "../../lib/matrix_stats.h"
 
 /*
     Transpose matrix.

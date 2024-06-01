@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
-#include "../lib/matrix_utils.h"
-#include "../lib/matrix_stats.h"
+#include "../../lib/matrix_utils.h"
+#include "../../lib/matrix_stats.h"
 
 void transpose_block(int size, int *mat, int row_offset, int col_offset) {
     if (size <= 128) { // Base case, use a simple loop for small matrices
