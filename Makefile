@@ -1,33 +1,33 @@
 
 .PHONY: stats
 CC=gcc
-SRC_DIR := src
+SRC_C_DIR := src/c
 TARGET_DIR := bin
 STATS_ROOT := stats
 STATS_DIR := $(STATS_ROOT)/$(shell date +'%y_%m_%dT%H:%M:%S')
 CUSTOM_HEADERS = lib/src/*
 OPTIM_FLAGS = 0 1 2 3 
 
-SRC := $(shell ls $(SRC_DIR))
-BINS := $(SRC:%.c=%)
+SRC_C := $(shell ls $(SRC_C_DIR))
+BINS_C := $(SRC_C:%.c=%)
 
-all: dirs compile stats report
+all: dirs compile_c stats report
 	
 dirs:
 	@echo Create directories...
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(STATS_DIR)/cache_runs
 
-stats: dirs $(BINS:%=compile_%)
+stats: dirs $(BINS_C:%=compile_%)
 	@echo Run benchmark file...
 	@sh benchmark.sh $(TARGET_DIR) $(STATS_DIR)
 
-compile: $(BINS:%=compile_%)
+compile_c: $(BINS_C:%=compile_c_%)
 
-compile_%:
+compile_c_%:
 	@echo Compile $*...
 	@for optim in $(OPTIM_FLAGS) ; do \
-		$(CC) $(SRC_DIR)/$*.c $(CUSTOM_HEADERS) -g0 -Wall -O$$optim -o $(TARGET_DIR)/$*-$$optim -lm; \
+		$(CC) $(SRC_C_DIR)/$*.c $(CUSTOM_HEADERS) -g0 -Wall -O$$optim -o $(TARGET_DIR)/$*-$$optim -lm; \
 	done
 
 report: report/report.tex
