@@ -6,20 +6,29 @@
 
 #include "../../lib/helper_cuda.h"
 
+
 #define REPETITIONS 50
 #define TILE_DIM 32
 
-__global__
-void transpose(int size, int* mat){
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
+__global__ void transpose(int size, int* matrix) {
+    __shared__ int tile[TILE_DIM][TILE_DIM+1];
 
-    if (x < size && y < size && x < y) {
-        int tmp = mat[y * size + x];
-        mat[y * size + x] = mat[x * size + y];
-        mat[x * size + y] = tmp;
+    int x = blockIdx.x * TILE_DIM + threadIdx.x;
+    int y = blockIdx.y * TILE_DIM + threadIdx.y;
+
+    for (int i = 0; i < TILE_DIM; i += blockDim.y) {
+        if (x < size && y + i < size) {
+            tile[threadIdx.y + i][threadIdx.x] = matrix[(y + i) * size + x];
+        }
     }
-        
+
+    __syncthreads();
+
+    for (int i = 0; i < TILE_DIM; i += blockDim.y) {
+        if (x < size && y + i < size) {
+            matrix[(y + i) * size + x] = tile[threadIdx.x][threadIdx.y + i];
+        }
+    }
 }
 
 /*
@@ -93,8 +102,7 @@ void init_matrix(int size, int* mat){
     }
 }
 
-int main(int argc, char **argv){
-    
+int main(int argc, char** argv) {
     // Check if argumnet is present
     if(argc < 2){
         printf("One argument expected. But got %d arguments.\n", argc-1);
@@ -121,8 +129,7 @@ int main(int argc, char **argv){
     checkCudaErrors( cudaMalloc(&dev_mat, size * size * sizeof(int)) );
     
     dim3 dimBlock(TILE_DIM, TILE_DIM);
-    dim3 dimGrid((size + dimBlock.x - 1) / dimBlock.x, (size + dimBlock.y - 1) / dimBlock.y);
-
+    dim3 dimGrid((size + TILE_DIM - 1) / TILE_DIM, (size + TILE_DIM - 1) / TILE_DIM);
     // Init matrix
     init_matrix(size, host_mat);
 
@@ -152,7 +159,7 @@ int main(int argc, char **argv){
             print_debug_info(size, host_mat, time, bandwidth);
         }
         else {
-            printf("%f,%f,gpu_naive\n", time, bandwidth);    
+            printf("%f,%f,gpu_tiled\n", time, bandwidth);    
         }
     }
 
