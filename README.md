@@ -1,4 +1,4 @@
-# GPU Computing - First Assignment
+# GPU Computing - Second Assignment
 
 This repository contains the code for the first assignment for the GPU computing course.
 
@@ -23,6 +23,12 @@ If you only want to compile the files in ```src``` run
 make compile
 ```
 This should compile all C files in ```src``` and store them into the (newly created) ```bin``` folder without starting the benchmarks. Compiled binaries follow the naming convention of ```<ALGORITHM>-<OPTIMIZATION LEVEL>```
+
+In order to run the experiments on the Marzola cluster run 
+```
+make marzola
+```
+The script compiles the source code and launches SLURM jobs on the cluster. Results are stored in the ```stats/``` folder.
 
 ## Validate implementations
 The correctness of the provided implementations can be verified by running the compiled binaries in 'debug mode'. After compilation you can run 
